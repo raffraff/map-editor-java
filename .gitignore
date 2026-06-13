@@ -1,0 +1,10 @@
+.gradle/
+build/
+gradle-8.5/
+*.iml
+.idea/
+.classpath
+.project
+.settings/
+bin/
+out/

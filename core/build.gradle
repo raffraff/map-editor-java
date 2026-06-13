@@ -1,0 +1,12 @@
+apply plugin: 'java-library'
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = ['src/main/java']
+sourceSets.main.resources.srcDirs = ['assets']
+
+eclipse.project.name = appName + '-core'
+idea.module.name = appName + '-core'

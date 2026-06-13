@@ -1,0 +1,37 @@
+apply plugin: 'java-library'
+apply plugin: 'application'
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+mainClassName = 'com.rose.mapeditor.desktop.DesktopLauncher'
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = ['src/main/java']
+sourceSets.main.resources.srcDirs = ['src/main/resources', '../core/assets']
+
+project.ext.mainClassName = 'com.rose.mapeditor.desktop.DesktopLauncher'
+project.ext.assetsDir = new File('../core/assets')
+
+run {
+    workingDir = rootProject.file('.').absolutePath
+    standardInput = System.in
+    if (System.getenv('ROSE_GAME_ROOT') != null) {
+        args System.getenv('ROSE_GAME_ROOT')
+    }
+}
+
+jar {
+    archiveBaseName.set('RoseMapEditor')
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    dependsOn configurations.runtimeClasspath
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from project(':core').sourceSets.main.resources.srcDirs
+    manifest {
+        attributes 'Main-Class': project.ext.mainClassName
+    }
+}
+
+eclipse.project.name = appName + '-desktop'
+idea.module.name = appName + '-desktop'
