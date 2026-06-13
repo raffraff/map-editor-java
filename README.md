@@ -70,25 +70,14 @@ $env:ROSE_GAME_ROOT = "E:\Path\To\Rose Online"
 - **Map Info...** — read-only summary of the loaded map
 - **Delete Map...** — remove a map folder and its `LIST_ZONE` entry
 - **New Flat Map...** — create a new map with flat HIM/TIL/IFO/MOV sectors
-- **Import Flyff Map...** — import a Flyff `.wld` / `.lnd` map into ROSE format
-- **Procedural Map...** — generate terrain and objects from a seed
+- **Import Flyff Map...** — import a Flyff `.wld` / `.lnd` map into ROSE format (*experimental*)
+- **Procedural Map...** — generate terrain and objects from a seed (*experimental*)
 - **Reload STB/STL** — reload core tables from the current game root
-
-### Rendering
-
-- Terrain heightmap with tile layers, shadow/light maps, and DDS/TGA textures
-- Map objects: decorations, constructions, event triggers, water, sky
-- Animated morph objects (ZMO playback)
-- NPC and monster spawns rendered from CHR / PART_NPC meshes (position only)
-- NPC (**N**) and monster (**M**) marker overlays with names from STB/STL
-- Toggle wireframe, terrain/object textures, terrain lightmap, and soft diffuse
-- Async map loading with progressive GPU upload
 
 ### Editing tools
 
 - **Height tool** — brush-based HIM height editing with save back to disk
-- **Bake lightmaps** — rebake terrain and object lightmaps for the loaded map
-- **Click-to-inspect** — left-click decorations, buildings, NPCs, monsters, or sounds to open an object info dialog
+- **Bake lightmaps** — rebake terrain lightmaps for the loaded map
 
 ## TODO
 
@@ -104,3 +93,9 @@ $env:ROSE_GAME_ROOT = "E:\Path\To\Rose Online"
 .\gradlew.bat :desktop:jar
 java -jar desktop/build/libs/RoseMapEditor.jar "E:\Path\To\Rose Online"
 ```
+
+## Screenshots
+
+<img width="1280" height="797" alt="image" src="https://github.com/user-attachments/assets/d9c9f6ea-d5c5-428e-a9a4-573c1ba91da2" />
+<img width="1280" height="798" alt="image" src="https://github.com/user-attachments/assets/3e8ce64d-4d21-4182-9880-d4ee9d832614" />
+
