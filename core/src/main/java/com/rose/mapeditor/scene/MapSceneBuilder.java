@@ -23,6 +23,8 @@ import com.rose.mapeditor.render.RoseTransform;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Builds a {@link MapScene} from loaded map + IFO + ZSC + LIT data. */
 public final class MapSceneBuilder {
@@ -84,8 +86,15 @@ public final class MapSceneBuilder {
                 MapMarker marker = addMarker(scene, entry.position, MapObjectKind.SOUND, Color.YELLOW, 2f, entry.path, ref);
                 marker.range = entry.range / 100f;
             }
-            for (Ifo.EffectEntry entry : ifo.effects) {
-                addMarker(scene, entry.position, MapObjectKind.EFFECT, Color.MAGENTA, 2f, entry.path);
+            for (int j = 0; j < ifo.effects.size(); j++) {
+                Ifo.EffectEntry entry = ifo.effects.get(j);
+                SceneObjectRef ref = SceneObjectRef.forEntry(ifo, MapObjectKind.EFFECT, "Effects", j, entry, null);
+                String label = entry.path != null && !entry.path.isBlank()
+                    ? entry.path.trim()
+                    : entry.description;
+                if (!EffectSceneBuilder.addEffect(scene, data, entry, ref)) {
+                    addMarker(scene, entry.position, MapObjectKind.EFFECT, Color.MAGENTA, 2f, label, ref);
+                }
             }
         }
 
@@ -112,6 +121,20 @@ public final class MapSceneBuilder {
         return RoseTransform.fromRose(part.position, part.rotation, part.scale);
     }
 
+    /** Builds cumulative part world matrices, matching the ZSC part hierarchy. */
+    private static Matrix4 resolvePartWorld(int partIndex, Zsc.PartModel part, Matrix4 partLocal,
+                                            Matrix4 objectWorld, List<Matrix4> partWorlds) {
+        Matrix4 world = new Matrix4();
+        if (partIndex == 0) {
+            RoseTransform.combinePartObject(world, partLocal, objectWorld);
+        } else if (part.parent >= 0 && part.parent < partWorlds.size()) {
+            RoseTransform.combinePartObject(world, partLocal, partWorlds.get(part.parent));
+        } else {
+            RoseTransform.combinePartObject(world, partLocal, objectWorld);
+        }
+        return world;
+    }
+
     private static Lit loadLitIfExists(String mapFolder, String subFolder, String relative) {
         Path litPath = Path.of(mapFolder, subFolder, relative);
         if (!Files.isRegularFile(litPath)) {
@@ -135,6 +158,7 @@ public final class MapSceneBuilder {
 
         Zsc.SceneObject zscObject = zsc.objects.get(entry.objectId);
         Matrix4 objectWorld = RoseTransform.fromRose(entry.position, entry.rotation, entry.scale);
+        List<Matrix4> partWorlds = new ArrayList<>();
 
         for (int partIndex = 0; partIndex < zscObject.models.size(); partIndex++) {
             Zsc.PartModel part = zscObject.models.get(partIndex);
@@ -148,8 +172,7 @@ public final class MapSceneBuilder {
             }
 
             Matrix4 partLocal = partWorld(part);
-            Matrix4 world = new Matrix4();
-            RoseTransform.combinePartObject(world, partLocal, objectWorld);
+            Matrix4 world = resolvePartWorld(partIndex, part, partLocal, objectWorld, partWorlds);
 
             MeshInstance inst = new MeshInstance();
             inst.kind = kind;
@@ -165,7 +188,10 @@ public final class MapSceneBuilder {
             attachPartMotion(part, inst, zms);
             applyLightmap(inst, lit, entryIndex, partIndex);
             scene.meshes.add(inst);
+            partWorlds.add(world);
         }
+
+        EffectSceneBuilder.addZscAttachedEffects(scene, GameData.get(), zsc, zscObject, objectWorld, partWorlds, ref);
     }
 
     private void attachPartMotion(Zsc.PartModel part, MeshInstance inst, Zms zms) {

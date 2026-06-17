@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.rose.mapeditor.RoseCoords;
+import com.rose.mapeditor.model.Ptl;
 
 /**
  * Free-fly camera for the Rose map editor.
@@ -31,6 +32,7 @@ public final class EditorCamera {
     private final Vector3 moveDelta = new Vector3();
 
     private final PerspectiveCamera camera = new PerspectiveCamera();
+    private final Matrix4 invViewScratch = new Matrix4();
     private int lastMouseX;
     private int lastMouseY;
     private boolean initialized;
@@ -166,5 +168,38 @@ public final class EditorCamera {
     public void setPosition(Vector3 rosePosition) {
         this.rosePosition.set(rosePosition);
         syncCamera();
+    }
+
+    /**
+     * Particle billboard axes.
+     * align 0 = full, 1 = fixed X/Z plane, 2 = Y-axis locked.
+     */
+    public void particleBillboardAxes(Ptl.AlignType align, Vector3 outRight, Vector3 outUp) {
+        switch (align) {
+            case AXIS_ALIGNED: {
+                invViewScratch.set(camera.view).inv();
+                float[] m = invViewScratch.val;
+                outRight.set(m[Matrix4.M00], 0f, m[Matrix4.M02]);
+                if (outRight.len2() < 1e-8f) {
+                    outRight.set(1f, 0f, 0f);
+                } else {
+                    outRight.nor();
+                }
+                outUp.set(0f, 1f, 0f);
+                break;
+            }
+            case WORLD_MESH:
+                outRight.set(1f, 0f, 0f);
+                outUp.set(0f, 0f, 1f);
+                break;
+            case BILLBOARD:
+            default: {
+                invViewScratch.set(camera.view).inv();
+                float[] m = invViewScratch.val;
+                outRight.set(m[Matrix4.M00], m[Matrix4.M01], m[Matrix4.M02]).nor();
+                outUp.set(m[Matrix4.M10], m[Matrix4.M11], m[Matrix4.M12]).nor();
+                break;
+            }
+        }
     }
 }

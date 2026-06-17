@@ -7,6 +7,8 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.rose.mapeditor.RoseCoords;
 import com.rose.mapeditor.model.Zms;
+import com.rose.mapeditor.render.PtlParticleSimulator;
+import com.rose.mapeditor.scene.EffectParticleEmitter;
 import com.rose.mapeditor.scene.MapMarker;
 import com.rose.mapeditor.scene.MapObjectKind;
 import com.rose.mapeditor.scene.MapScene;
@@ -21,7 +23,8 @@ public final class SceneObjectPicker {
         MapObjectKind.CONSTRUCTION,
         MapObjectKind.NPC,
         MapObjectKind.MONSTER,
-        MapObjectKind.SOUND
+        MapObjectKind.SOUND,
+        MapObjectKind.EFFECT
     };
 
     private final Vector3 hitPoint = new Vector3();
@@ -71,6 +74,37 @@ public final class SceneObjectPicker {
                 if (distance > 0f && distance < bestDistance) {
                     bestDistance = distance;
                     bestRef = marker.pickRef;
+                }
+            }
+        }
+
+        for (EffectParticleEmitter emitter : scene.effectEmitters) {
+            if (emitter.pickRef == null) {
+                continue;
+            }
+            for (PtlParticleSimulator.LiveParticle particle : emitter.simulator.particles()) {
+                if (!particle.visible) {
+                    continue;
+                }
+                if (intersectLiveParticle(emitter, particle, ray, hitPoint)) {
+                    float distance = distanceAlongRay(ray, hitPoint);
+                    if (distance > 0f && distance < bestDistance) {
+                        bestDistance = distance;
+                        bestRef = emitter.pickRef;
+                    }
+                }
+            }
+        }
+
+        for (EffectParticleEmitter emitter : scene.effectEmitters) {
+            if (emitter.pickRef == null) {
+                continue;
+            }
+            if (intersectEmitterOrigin(emitter, ray, hitPoint)) {
+                float distance = distanceAlongRay(ray, hitPoint);
+                if (distance > 0f && distance < bestDistance) {
+                    bestDistance = distance;
+                    bestRef = emitter.pickRef;
                 }
             }
         }
@@ -163,6 +197,32 @@ public final class SceneObjectPicker {
         }
 
         return Intersector.intersectRayBounds(ray, markerBounds, hitOut);
+    }
+
+    private boolean intersectLiveParticle(EffectParticleEmitter emitter,
+                                          PtlParticleSimulator.LiveParticle particle,
+                                          Ray ray, Vector3 hitOut) {
+        transformParticlePosition(emitter, particle.position, roseScratch);
+        Vector3 gdx = RoseCoords.toGdx(roseScratch);
+        float halfW = particle.size.x * 0.5f;
+        float halfH = particle.size.y * 0.5f;
+        boundsMin.set(gdx.x - halfW, gdx.y - halfH, gdx.z - halfW);
+        boundsMax.set(gdx.x + halfW, gdx.y + halfH, gdx.z + halfW);
+        markerBounds.set(boundsMin, boundsMax);
+        return Intersector.intersectRayBounds(ray, markerBounds, hitOut);
+    }
+
+    private boolean intersectEmitterOrigin(EffectParticleEmitter emitter, Ray ray, Vector3 hitOut) {
+        Vector3 gdx = RoseCoords.toGdx(emitter.origin(roseScratch));
+        float half = 2f;
+        boundsMin.set(gdx.x - half, gdx.y, gdx.z - half);
+        boundsMax.set(gdx.x + half, gdx.y + half * 2f, gdx.z + half);
+        markerBounds.set(boundsMin, boundsMax);
+        return Intersector.intersectRayBounds(ray, markerBounds, hitOut);
+    }
+
+    private void transformParticlePosition(EffectParticleEmitter emitter, Vector3 localRose, Vector3 outRose) {
+        emitter.worldPosition(localRose, outRose);
     }
 
     private boolean meshBounds(Zms zms, MeshInstance instance, BoundingBox out) {

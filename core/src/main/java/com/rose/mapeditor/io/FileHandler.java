@@ -73,7 +73,7 @@ public final class FileHandler implements Closeable {
         return new Vector2(readIntLE(), readIntLE());
     }
 
-    /** Reads 16 floats in XNA Matrix order (M11..M44, row-major). */
+    /** Reads 16 floats (M11..M44, row-major). */
     public float[] readMatrix16() throws IOException {
         float[] m = new float[16];
         for (int i = 0; i < 16; i++) {
@@ -129,6 +129,23 @@ public final class FileHandler implements Closeable {
         byte[] data = new byte[length];
         file.readFully(data);
         return new String(data, encoding);
+    }
+
+    /** Rose u32-length prefixed string (EFT, PTL, etc.). */
+    public String readU32String() throws IOException {
+        int length = readIntLE();
+        if (length <= 0) {
+            return "";
+        }
+        byte[] data = new byte[length];
+        file.readFully(data);
+        return new String(data, encoding);
+    }
+
+    public void skipBytes(long count) throws IOException {
+        if (count > 0) {
+            file.seek(file.getFilePointer() + count);
+        }
     }
 
     public void writeInt(int value) throws IOException {
@@ -194,6 +211,13 @@ public final class FileHandler implements Closeable {
 
     public void writeBytes(byte[] data) throws IOException {
         file.write(data);
+    }
+
+    public void writeZString(String value) throws IOException {
+        if (value != null && !value.isEmpty()) {
+            file.write(value.getBytes(encoding));
+        }
+        file.writeByte(0);
     }
 
     @Override

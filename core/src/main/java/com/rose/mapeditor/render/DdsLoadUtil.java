@@ -61,6 +61,19 @@ public final class DdsLoadUtil {
             }
         }
 
+        if (isFourCcCompressed(file)) {
+            try {
+                BgraImage decoded = decodeBgra8888(file, label);
+                Texture texture = textureFromBgra(decoded);
+                if (texture != null) {
+                    return texture;
+                }
+            } catch (IOException decodeFailure) {
+                Gdx.app.debug("DdsLoadUtil",
+                    "Software DDS decode failed for " + ddsPath + ": " + decodeFailure.getMessage());
+            }
+        }
+
         try {
             String absolute = ddsPath.toAbsolutePath().toString();
             Texture texture = new Texture(DDSLoader.fromDdsToTexture(Gdx.files.absolute(absolute)));

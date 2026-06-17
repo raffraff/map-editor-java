@@ -19,6 +19,7 @@ public final class RenderOptions {
     private boolean wireframe;
     private boolean terrainTextures = true;
     private boolean objectTextures = true;
+    private boolean effectsEnabled = true;
 
     public boolean isSoftDiffuse() {
         return softDiffuse;
@@ -78,5 +79,13 @@ public final class RenderOptions {
 
     public void toggleObjectTextures() {
         objectTextures = !objectTextures;
+    }
+
+    public boolean isEffectsEnabled() {
+        return effectsEnabled;
+    }
+
+    public void toggleEffects() {
+        effectsEnabled = !effectsEnabled;
     }
 }

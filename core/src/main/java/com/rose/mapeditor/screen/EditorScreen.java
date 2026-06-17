@@ -94,6 +94,7 @@ public class EditorScreen extends ScreenAdapter {
     private TextButton softDiffuseButton;
     private TextButton npcMarkersButton;
     private TextButton monsterMarkersButton;
+    private TextButton effectsButton;
     private TextButton terrainLightmapButton;
     private TextButton wireframeButton;
     private TextButton terrainTexturesButton;
@@ -232,6 +233,14 @@ public class EditorScreen extends ScreenAdapter {
             }
         });
 
+        effectsButton = new TextButton("Effects: ON", skin);
+        effectsButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                toggleEffects();
+            }
+        });
+
         terrainLightmapButton = new TextButton("Terrain lightmap: ON", skin);
         terrainLightmapButton.addListener(new ChangeListener() {
             @Override
@@ -295,6 +304,7 @@ public class EditorScreen extends ScreenAdapter {
         root.add(softDiffuseButton).width(180).padTop(4).left().row();
         root.add(npcMarkersButton).width(180).padTop(4).left().row();
         root.add(monsterMarkersButton).width(180).padTop(4).left().row();
+        root.add(effectsButton).width(180).padTop(4).left().row();
         root.add(terrainLightmapButton).width(180).padTop(4).left().row();
         root.add(wireframeButton).width(180).padTop(4).left().row();
         root.add(terrainTexturesButton).width(180).padTop(4).left().row();
@@ -672,6 +682,11 @@ public class EditorScreen extends ScreenAdapter {
         updateMonsterMarkersButtonLabel();
     }
 
+    private void toggleEffects() {
+        renderOptions.toggleEffects();
+        updateEffectsButtonLabel();
+    }
+
     private void toggleTerrainLightmap() {
         renderOptions.toggleTerrainLightmap();
         updateTerrainLightmapButtonLabel();
@@ -707,6 +722,12 @@ public class EditorScreen extends ScreenAdapter {
     private void updateMonsterMarkersButtonLabel() {
         if (monsterMarkersButton != null) {
             monsterMarkersButton.setText(renderOptions.isMonsterMarkers() ? "Monster markers: ON" : "Monster markers: OFF");
+        }
+    }
+
+    private void updateEffectsButtonLabel() {
+        if (effectsButton != null) {
+            effectsButton.setText(renderOptions.isEffectsEnabled() ? "Effects: ON" : "Effects: OFF");
         }
     }
 
@@ -1034,7 +1055,7 @@ public class EditorScreen extends ScreenAdapter {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         camera.update(delta);
-        sceneRenderer.update(delta);
+        sceneRenderer.update(currentMap != null ? currentMap.scene : null, delta);
 
         boolean drewSky = false;
         if (currentMap != null && currentMap.scene != null) {
@@ -1069,7 +1090,7 @@ public class EditorScreen extends ScreenAdapter {
         }
 
         positionLabel.setText(String.format(
-            "Camera: X=%.1f Y=%.1f Z=%.1f  [WASD move, Q/E up/down, Shift fast, RMB look, LMB inspect, H height, L lightmap, F wireframe, G terrain tex, O object tex, T soft diffuse, N NPC markers, M monster markers]",
+            "Camera: X=%.1f Y=%.1f Z=%.1f  [WASD move, Q/E up/down, Shift fast, RMB look, LMB inspect, H height, L lightmap, F wireframe, G terrain tex, O object tex, T soft diffuse, \r\nN NPC markers, M monster markers, X effects]",
             camera.position().x, camera.position().y, camera.position().z));
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
@@ -1109,6 +1130,11 @@ public class EditorScreen extends ScreenAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
             toggleMonsterMarkers();
             updateMonsterMarkersButtonLabel();
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.X)) {
+            toggleEffects();
+            updateEffectsButtonLabel();
         }
 
         GlState.resetForUi();

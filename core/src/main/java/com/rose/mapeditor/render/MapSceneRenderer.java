@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.rose.mapeditor.scene.MapObjectKind;
 import com.rose.mapeditor.scene.MapScene;
 import com.rose.mapeditor.scene.MeshInstance;
 
@@ -12,6 +13,7 @@ public final class MapSceneRenderer implements Disposable {
 
     private final ObjectRenderer objectRenderer = new ObjectRenderer();
     private final WaterRenderer waterRenderer = new WaterRenderer();
+    private final EffectRenderer effectRenderer = new EffectRenderer();
     private final MarkerRenderer markerRenderer = new MarkerRenderer();
     private final Array<MeshInstance> transparentMeshes = new Array<>();
     private RenderOptions renderOptions = new RenderOptions();
@@ -19,10 +21,12 @@ public final class MapSceneRenderer implements Disposable {
     public void setRenderOptions(RenderOptions renderOptions) {
         this.renderOptions = renderOptions != null ? renderOptions : new RenderOptions();
         objectRenderer.setRenderOptions(this.renderOptions);
+        effectRenderer.setRenderOptions(this.renderOptions);
     }
 
-    public void update(float delta) {
+    public void update(MapScene scene, float delta) {
         waterRenderer.update(delta);
+        effectRenderer.update(scene, delta);
     }
 
     public void render(MapScene scene, Matrix4 projView, Vector3 cameraGdx, EditorCamera camera) {
@@ -35,6 +39,9 @@ public final class MapSceneRenderer implements Disposable {
 
         for (int i = 0; i < scene.meshes.size(); i++) {
             MeshInstance mesh = scene.meshes.get(i);
+            if (!renderOptions.isEffectsEnabled() && mesh.kind == MapObjectKind.EFFECT) {
+                continue;
+            }
             if (!objectRenderer.usesTransparency(mesh)) {
                 objectRenderer.render(mesh, projView);
             }
@@ -43,6 +50,9 @@ public final class MapSceneRenderer implements Disposable {
         transparentMeshes.clear();
         for (int i = 0; i < scene.meshes.size(); i++) {
             MeshInstance mesh = scene.meshes.get(i);
+            if (!renderOptions.isEffectsEnabled() && mesh.kind == MapObjectKind.EFFECT) {
+                continue;
+            }
             if (objectRenderer.usesTransparency(mesh)) {
                 transparentMeshes.add(mesh);
             }
@@ -60,6 +70,7 @@ public final class MapSceneRenderer implements Disposable {
         objectRenderer.endPass();
 
         WireframeGl.disable();
+        effectRenderer.render(scene, projView, camera);
         waterRenderer.render(scene, projView);
 
         if (scene.waterSurfaces.isEmpty()) {
@@ -73,12 +84,14 @@ public final class MapSceneRenderer implements Disposable {
     public void dispose() {
         objectRenderer.dispose();
         waterRenderer.dispose();
+        effectRenderer.dispose();
         markerRenderer.dispose();
     }
 
     public void clearMapResources() {
         objectRenderer.clearMapResources();
         waterRenderer.clearMapResources();
+        effectRenderer.clearMapResources();
     }
 
     public void beginScenePreload(MapScene scene) {

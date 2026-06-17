@@ -3,6 +3,8 @@ package com.rose.mapeditor;
 import com.rose.mapeditor.data.Stb;
 import com.rose.mapeditor.data.Stl;
 import com.rose.mapeditor.model.Chr;
+import com.rose.mapeditor.model.Eft;
+import com.rose.mapeditor.model.Ptl;
 import com.rose.mapeditor.model.Zms;
 import com.rose.mapeditor.model.Zmo;
 import com.rose.mapeditor.model.Zsc;
@@ -27,6 +29,8 @@ public final class GameData {
     private final Map<String, Zms> zmsCache = new ConcurrentHashMap<>();
     private final Map<String, Zmo> zmoCache = new ConcurrentHashMap<>();
     private Chr listNpcChr;
+    private final Map<String, Eft> eftCache = new ConcurrentHashMap<>();
+    private final Map<String, Ptl> ptlCache = new ConcurrentHashMap<>();
 
     public Chr getOrLoadListNpcChr() throws IOException {
         if (listNpcChr == null) {
@@ -60,6 +64,34 @@ public final class GameData {
         return zmo;
     }
 
+    public Eft getOrLoadEft(String relativePath) throws IOException {
+        String key = relativePath.replace('\\', '/').trim();
+        if (key.isEmpty()) {
+            throw new IOException("Empty EFT path");
+        }
+        Eft cached = eftCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Eft eft = new Eft(resolve(key).toString());
+        eftCache.put(key, eft);
+        return eft;
+    }
+
+    public Ptl getOrLoadPtl(String relativePath) throws IOException {
+        String key = relativePath.replace('\\', '/').trim();
+        if (key.isEmpty()) {
+            throw new IOException("Empty PTL path");
+        }
+        Ptl cached = ptlCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Ptl ptl = new Ptl(resolve(key).toString());
+        ptlCache.put(key, ptl);
+        return ptl;
+    }
+
     public void clearMapCaches() {
         zmsCache.clear();
         zmoCache.clear();
@@ -74,6 +106,8 @@ public final class GameData {
         zscs.clear();
         zmsCache.clear();
         zmoCache.clear();
+        eftCache.clear();
+        ptlCache.clear();
         listNpcChr = null;
     }
 

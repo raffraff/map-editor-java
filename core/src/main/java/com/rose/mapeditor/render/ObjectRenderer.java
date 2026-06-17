@@ -118,16 +118,8 @@ public final class ObjectRenderer implements Disposable {
 
         Texture diffuse = textures.get(instance.diffusePath);
         boolean alphaTest = instance.alphaTest;
-        boolean blend = instance.alphaBlend;
 
-        if (blend) {
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-            Gdx.gl.glDepthMask(false);
-        } else {
-            Gdx.gl.glDisable(GL20.GL_BLEND);
-            Gdx.gl.glDepthMask(true);
-        }
+        RoseBlend.applyMeshBlend(instance);
 
         shader.bind();
         if (instance.animation != null && !instance.animation.morphVertices) {

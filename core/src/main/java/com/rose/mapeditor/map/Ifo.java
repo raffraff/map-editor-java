@@ -79,7 +79,7 @@ public final class Ifo {
         public int height;
         public int mapCellX;
         public int mapCellY;
-        /** XNA matrix M11..M44 (row-major). */
+        /** matrix M11..M44 (row-major). */
         public float[] world = new float[16];
         public String mapName = "";
     }

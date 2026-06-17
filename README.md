@@ -45,22 +45,23 @@ $env:ROSE_GAME_ROOT = "E:\Path\To\Rose Online"
 
 ## Controls
 
-| Input | Action |
-|--------|--------|
-| W / A / S / D | Move camera |
-| Q / E | Move camera up / down |
-| Shift | Move faster |
+| Input              | Action |
+|--------------------|--------|
+| W / A / S / D      | Move camera |
+| Q / E              | Move camera up / down |
+| Shift              | Move faster |
 | Right mouse button | Look around |
-| Left mouse button | Inspect object under cursor (when height tool is off) |
-| H | Toggle height brush tool |
-| L | Toggle terrain lightmap |
-| F | Toggle wireframe |
-| G | Toggle terrain textures |
-| O | Toggle object textures |
-| T | Toggle soft diffuse lighting |
-| N | Toggle NPC spawn markers |
-| M | Toggle monster spawn markers |
-| Escape | Close dialog, or quit |
+| Left mouse button  | Inspect object under cursor (when height tool is off) |
+| H                  | Toggle height brush tool |
+| L                  | Toggle terrain lightmap |
+| F                  | Toggle wireframe |
+| G                  | Toggle terrain textures |
+| O                  | Toggle object textures |
+| T                  | Toggle soft diffuse lighting |
+| N                  | Toggle NPC spawn markers |
+| M                  | Toggle monster spawn markers |
+| X                  | Toggle map effects |
+| Escape             | Close dialog, or quit |
 
 ## Editor features
 
@@ -78,6 +79,7 @@ $env:ROSE_GAME_ROOT = "E:\Path\To\Rose Online"
 
 - **Height tool** — brush-based HIM height editing with save back to disk
 - **Bake lightmaps** — rebake terrain lightmaps for the loaded map
+- **Object inspect** — left-click objects to view IFO/ZSC/EFT metadata (read-only)
 
 ## TODO
 
@@ -85,7 +87,7 @@ $env:ROSE_GAME_ROOT = "E:\Path\To\Rose Online"
 - Object batch renderer culling and frustum optimizations
 - Menus, undo system, and property editors
 - Tile painting, object placement/movement
-- Audio preview, sprite rendering
+- Audio preview
 
 ## Building a fat JAR
 

@@ -6,9 +6,15 @@ import com.badlogic.gdx.math.Vector3;
 import com.rose.mapeditor.GameData;
 import com.rose.mapeditor.data.Stb;
 import com.rose.mapeditor.data.Stl;
+import com.rose.mapeditor.model.Eft;
+import com.rose.mapeditor.model.Ptl;
 import com.rose.mapeditor.model.Zsc;
 import com.rose.mapeditor.scene.MapObjectKind;
 import com.rose.mapeditor.scene.SceneObjectRef;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** Builds a read-only summary for a picked map object. */
 public final class ObjectInfoFormatter {
@@ -31,6 +37,12 @@ public final class ObjectInfoFormatter {
             Ifo.SoundEntry sound = (Ifo.SoundEntry) ref.entry;
             if (sound.path != null && !sound.path.isBlank()) {
                 return kind + " - " + sound.path.trim();
+            }
+        }
+        if (ref.entry instanceof Ifo.EffectEntry) {
+            Ifo.EffectEntry effect = (Ifo.EffectEntry) ref.entry;
+            if (effect.path != null && !effect.path.isBlank()) {
+                return kind + " - " + effect.path.trim();
             }
         }
         if (ref.entry.description != null && !ref.entry.description.isBlank()) {
@@ -79,6 +91,8 @@ public final class ObjectInfoFormatter {
             appendMonsterInfo(out, data, (Ifo.MonsterSpawnEntry) entry, ref.chrId);
         } else if (ref.kind == MapObjectKind.SOUND) {
             appendSoundInfo(out, (Ifo.SoundEntry) entry);
+        } else if (ref.kind == MapObjectKind.EFFECT) {
+            appendEffectInfo(out, data, (Ifo.EffectEntry) entry);
         }
 
         return out.toString().trim();
@@ -142,11 +156,20 @@ public final class ObjectInfoFormatter {
         appendLine(out, "Interval", Integer.toString(entry.interval));
     }
 
+    private static void appendEffectInfo(StringBuilder out, GameData data, Ifo.EffectEntry entry) {
+        appendLine(out, "EFT file", blankToDash(entry.path));
+        if (entry.path != null && !entry.path.isBlank()) {
+            appendEftContents(out, data, entry.path.trim(), "  ");
+        }
+    }
+
     private static void appendZscInfo(StringBuilder out, GameData data, String zscName, int objectId) {
         Zsc zsc = data.zscs.get(zscName);
         if (zsc == null || objectId < 0 || objectId >= zsc.objects.size()) {
             return;
         }
+
+        appendZscFileLocation(out, data, zsc);
 
         Zsc.SceneObject sceneObject = zsc.objects.get(objectId);
         out.append('\n').append("ZSC object #").append(objectId).append(" (")
@@ -167,6 +190,138 @@ public final class ObjectInfoFormatter {
             }
             out.append('\n');
         }
+
+        appendZscAttachedEffects(out, data, zsc, sceneObject);
+    }
+
+    private static void appendZscFileLocation(StringBuilder out, GameData data, Zsc zsc) {
+        if (zsc.filePath == null || zsc.filePath.isBlank()) {
+            appendLine(out, "ZSC file", "-");
+            return;
+        }
+        Path absolute = Paths.get(zsc.filePath).toAbsolutePath().normalize();
+        Path gameRoot = data.getGameRoot().toAbsolutePath().normalize();
+        appendLine(out, "ZSC file", formatRelative(gameRoot, absolute));
+        appendLine(out, "ZSC file (absolute)", absolute.toString().replace('\\', '/'));
+    }
+
+    private static void appendZscAttachedEffects(StringBuilder out, GameData data, Zsc zsc,
+                                                 Zsc.SceneObject sceneObject) {
+        if (sceneObject.effects.isEmpty()) {
+            return;
+        }
+
+        out.append('\n').append("Attached effects (").append(sceneObject.effects.size()).append("):").append('\n');
+        for (int i = 0; i < sceneObject.effects.size(); i++) {
+            Zsc.PartEffect slot = sceneObject.effects.get(i);
+            out.append("  [").append(i).append("] ");
+
+            String eftPath = null;
+            if (slot.effectId >= 0 && slot.effectId < zsc.effects.size()) {
+                eftPath = zsc.effects.get(slot.effectId);
+                out.append("EFT=").append(blankToDash(eftPath));
+            } else {
+                out.append("EFT=(invalid id ").append(slot.effectId).append(')');
+            }
+            out.append('\n');
+
+            out.append("      type=").append(effectTypeName(slot.effectType));
+            out.append(", parent=").append(effectParentLabel(slot.parent));
+            out.append(", effectId=").append(slot.effectId).append('\n');
+            appendVector3Indented(out, "position", slot.position, "      ");
+            appendQuaternionIndented(out, "rotation", slot.rotation, "      ");
+            appendVector3Indented(out, "scale", slot.scale, "      ");
+
+            if (eftPath != null && !eftPath.isBlank()) {
+                appendEftContents(out, data, eftPath.trim(), "      ");
+            }
+        }
+    }
+
+    private static void appendEftContents(StringBuilder out, GameData data, String eftPath, String indent) {
+        try {
+            Eft eft = data.getOrLoadEft(eftPath);
+            for (int i = 0; i < eft.particles.size(); i++) {
+                Eft.ParticleEntry particle = eft.particles.get(i);
+                out.append(indent).append("Particle ").append(i).append(": PTL=")
+                    .append(blankToDash(particle.particleFile)).append('\n');
+                appendPtlSummary(out, data, particle.particleFile, indent + "  ");
+            }
+            for (int i = 0; i < eft.meshes.size(); i++) {
+                Eft.MeshEntry mesh = eft.meshes.get(i);
+                out.append(indent).append("Mesh ").append(i).append(": ZMS=")
+                    .append(blankToDash(mesh.meshFile));
+                if (mesh.meshTextureFile != null && !mesh.meshTextureFile.isBlank()) {
+                    out.append(" texture=").append(mesh.meshTextureFile.trim());
+                }
+                out.append('\n');
+            }
+        } catch (IOException e) {
+            out.append(indent).append("(EFT load failed: ").append(eftPath).append(')').append('\n');
+        }
+    }
+
+    private static void appendPtlSummary(StringBuilder out, GameData data, String ptlPath, String indent) {
+        if (ptlPath == null || ptlPath.isBlank()) {
+            return;
+        }
+        try {
+            Ptl ptl = data.getOrLoadPtl(ptlPath.trim());
+            for (int i = 0; i < ptl.sequences.size(); i++) {
+                Ptl.Sequence sequence = ptl.sequences.get(i);
+                out.append(indent).append("Sequence ").append(i).append(": ");
+                if (sequence.name != null && !sequence.name.isBlank()) {
+                    out.append('"').append(sequence.name.trim()).append("\" ");
+                }
+                out.append("texture=").append(blankToDash(sequence.texturePath));
+                out.append(" count=").append(sequence.particleCount);
+                out.append(" coord=").append(sequence.coordType.name().toLowerCase());
+                out.append(" align=").append(sequence.alignType.name().toLowerCase());
+                out.append('\n');
+            }
+        } catch (IOException e) {
+            out.append(indent).append("(PTL load failed: ").append(ptlPath.trim()).append(')').append('\n');
+        }
+    }
+
+    private static String effectTypeName(short effectType) {
+        switch (effectType) {
+            case 1:
+                return "Day/Night";
+            case 2:
+                return "Light container";
+            default:
+                return "Normal";
+        }
+    }
+
+    private static String effectParentLabel(short parent) {
+        return parent < 0 ? "object root" : "part " + parent;
+    }
+
+    private static String formatRelative(Path gameRoot, Path target) {
+        try {
+            return gameRoot.relativize(target).toString().replace('\\', '/');
+        } catch (Exception ignored) {
+            return target.toString().replace('\\', '/');
+        }
+    }
+
+    private static void appendVector3Indented(StringBuilder out, String label, Vector3 value, String indent) {
+        if (value == null) {
+            return;
+        }
+        out.append(indent).append(label).append(": ")
+            .append(String.format("(%.2f, %.2f, %.2f)", value.x, value.y, value.z)).append('\n');
+    }
+
+    private static void appendQuaternionIndented(StringBuilder out, String label, Quaternion value, String indent) {
+        if (value == null || value.isIdentity()) {
+            return;
+        }
+        out.append(indent).append(label).append(": ")
+            .append(String.format("(%.3f, %.3f, %.3f, %.3f)", value.x, value.y, value.z, value.w))
+            .append('\n');
     }
 
     private static String resolveListNpcName(GameData data, int chrId) {

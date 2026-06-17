@@ -11,6 +11,7 @@ public final class MapScene {
 
     public final List<MeshInstance> meshes = new ArrayList<>();
     public final List<MapMarker> markers = new ArrayList<>();
+    public final List<EffectParticleEmitter> effectEmitters = new ArrayList<>();
     public final List<Ifo.WaterVolume> waterVolumes = new ArrayList<>();
     public final List<WaterSurface> waterSurfaces = new ArrayList<>();
 
@@ -35,8 +36,8 @@ public final class MapScene {
             }
         }
         return String.format(
-            "meshes=%d (npc=%d) markers=%d water=%d sky=%s",
-            meshes.size(), npcMeshes, markers.size(), waterSurfaces.size(),
+            "meshes=%d (npc=%d) markers=%d effectEmitters=%d water=%d sky=%s",
+            meshes.size(), npcMeshes, markers.size(), effectEmitters.size(), waterSurfaces.size(),
             skyMesh != null ? "yes" : "no"
         );
     }

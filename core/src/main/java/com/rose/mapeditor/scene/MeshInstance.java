@@ -18,6 +18,12 @@ public final class MeshInstance {
 
     /** From ZSC texture block - enables alpha blending when true. */
     public boolean alphaBlend;
+    /** Rose/Znzin blend factors from EFT mesh entries (0 = use default alpha blend). */
+    public int blendSrc;
+    public int blendDst;
+    public int blendOp;
+    /** From EFT mesh entries; defaults to true for regular ZSC objects. */
+    public boolean depthWriteEnabled = true;
     /** From ZSC - render both faces (foliage, fences, morph objects). */
     public boolean twoSided;
     /** From ZSC - discard fragments below {@link #alphaReference}. */
