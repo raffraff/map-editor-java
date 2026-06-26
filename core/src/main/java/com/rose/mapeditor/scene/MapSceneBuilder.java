@@ -225,11 +225,18 @@ public final class MapSceneBuilder {
                 return;
             }
             Lit.Part litPart = litObject.parts.get(litPartIdx);
+            Path lightmapFile = Path.of(lit.folder, litPart.ddsName);
+            if (!Files.isRegularFile(lightmapFile)) {
+                Gdx.app.debug("MapSceneBuilder",
+                    "Lightmap missing, falling back to diffuse: " + lightmapFile);
+                return;
+            }
+
             int objectsPerWidth = litPart.objectsPerWidth;
             int mapPosition = litPart.mapPosition;
 
             inst.lightmapEnabled = true;
-            inst.lightmapPath = lit.folder + "/" + litPart.ddsName;
+            inst.lightmapPath = lightmapFile.toString().replace('\\', '/');
             inst.lightmapAdd.set(mapPosition % objectsPerWidth, mapPosition / objectsPerWidth, 0);
             float inv = 1f / objectsPerWidth;
             inst.lightmapMul.set(inv, inv, 1);

@@ -37,14 +37,28 @@ public final class TextureCache implements Disposable {
             cache.put(key, loaded);
             return loaded;
         }
-        return placeholder();
+        Texture fallback = placeholder();
+        cache.put(key, fallback);
+        return fallback;
     }
 
+    /** Returns true when a texture path has been resolved (loaded or fallback cached). */
     public boolean isCached(String relativePath) {
         if (relativePath == null || relativePath.isBlank()) {
             return false;
         }
         return cache.containsKey(normalize(relativePath));
+    }
+
+    /** Returns true when the texture file exists on disk (absolute or relative to game root). */
+    public boolean fileExists(String path) {
+        if (path == null || path.isBlank()) {
+            return false;
+        }
+        String key = normalize(path);
+        Path keyPath = Paths.get(key);
+        Path file = keyPath.isAbsolute() ? keyPath : GameData.get().resolve(key);
+        return Files.isRegularFile(file);
     }
 
     public boolean hasAlphaChannel(String relativePath) {

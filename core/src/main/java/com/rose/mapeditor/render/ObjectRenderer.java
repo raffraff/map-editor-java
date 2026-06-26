@@ -129,8 +129,10 @@ public final class ObjectRenderer implements Disposable {
         }
         shader.setUniformMatrix("u_world", renderWorld);
         shader.setUniformMatrix("u_projView", projView);
+        boolean useLightmap = instance.lightmapEnabled && instance.lightmapPath != null
+            && textures.fileExists(instance.lightmapPath);
         shader.setUniformi("u_masterLightmapEnabled", masterLightmapEnabled ? 1 : 0);
-        shader.setUniformi("u_lightmapEnabled", instance.lightmapEnabled ? 1 : 0);
+        shader.setUniformi("u_lightmapEnabled", useLightmap ? 1 : 0);
         shader.setUniformi("u_softDiffuseEnabled", renderOptions.isSoftDiffuse() ? 1 : 0);
         shader.setUniformi("u_texturesEnabled", renderOptions.isObjectTextures() ? 1 : 0);
         shader.setUniformi("u_alphaTestEnabled", alphaTest ? 1 : 0);
@@ -145,7 +147,7 @@ public final class ObjectRenderer implements Disposable {
         shader.setUniformi("u_lightmap", 1);
 
         diffuse.bind(0);
-        if (instance.lightmapEnabled && instance.lightmapPath != null) {
+        if (useLightmap) {
             textures.get(instance.lightmapPath).bind(1);
         }
 
@@ -240,7 +242,9 @@ public final class ObjectRenderer implements Disposable {
         if (!textures.isCached(instance.diffusePath)) {
             return false;
         }
-        if (instance.lightmapEnabled && instance.lightmapPath != null && !textures.isCached(instance.lightmapPath)) {
+        if (instance.lightmapEnabled && instance.lightmapPath != null
+            && textures.fileExists(instance.lightmapPath)
+            && !textures.isCached(instance.lightmapPath)) {
             return false;
         }
         return true;
