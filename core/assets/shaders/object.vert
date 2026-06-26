@@ -17,12 +17,12 @@ varying float v_vertexAlpha;
 void main() {
     vec4 roseWorld = u_world * vec4(a_position, 1.0);
 
-    vec3 gdxWorld = vec3(roseWorld.x, roseWorld.z, roseWorld.y);
+    vec3 gdxWorld = vec3(roseWorld.x, roseWorld.z, -roseWorld.y);
     gl_Position = u_projView * vec4(gdxWorld, 1.0);
 
     mat3 normalMatrix = mat3(u_world);
     vec3 roseNormal = normalMatrix * a_normal;
-    v_normal = normalize(vec3(roseNormal.x, roseNormal.z, roseNormal.y));
+    v_normal = normalize(vec3(roseNormal.x, roseNormal.z, -roseNormal.y));
 
     v_texCoord = a_texCoord0;
     v_lightmap = a_texCoord1;

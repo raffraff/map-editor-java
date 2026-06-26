@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Disposable;
+import com.rose.mapeditor.RoseCoords;
 import com.rose.mapeditor.TerrainUtil;
 import com.rose.mapeditor.map.Him;
 import com.rose.mapeditor.map.PlaneLightmapPaths;
@@ -170,14 +171,14 @@ public final class HeightmapBlock implements Disposable {
                         float roseX = dy4 * 2.5f + mapOffset.y * 160.0f;
                         float roseY = 10400.0f - (dx4 * 2.5f + mapOffset.x * 160.0f);
                         float roseZ = heightFile.position[dx4][dy4];
-                        // Store libGDX coordinates (same mapping as object.vert / RoseCoords.toGdx)
-                        vertices[o] = roseX;
-                        vertices[o + 1] = roseZ;
-                        vertices[o + 2] = roseY;
+                        Vector3 gdx = RoseCoords.toGdx(roseX, roseY, roseZ);
+                        vertices[o] = gdx.x;
+                        vertices[o + 1] = gdx.y;
+                        vertices[o + 2] = gdx.z;
 
-                        // Rose Y is inverted when mapped to libGDX Z; flip V so tile UVs align on the ground plane.
+                        // Tile UVs (vy, vx).
                         float texU = vy / 4.0f;
-                        float texV = 1.0f - vx / 4.0f;
+                        float texV = vx / 4.0f;
                         Vector2 bottom = new Vector2(texU, texV);
                         Vector2 top = TerrainUtil.rotationToCoordinates(rotation, new Vector2(texU, texV));
                         Vector2 shadow = new Vector2(dy4 / 64.0f, dx4 / 64.0f);

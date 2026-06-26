@@ -101,7 +101,7 @@ public final class RoseTransform {
 
     /**
      * Combines part + object for column-vector shaders with a Rose→GDX axis swap in the vertex shader.
-     * Row order {@code v * part * object}: part is applied to the mesh first.
+     * Rose→GDX uses {@code (x, z, -y)}; row order {@code v * part * object}: part is applied to the mesh first.
      */
     public static void combinePartObject(Matrix4 out, Matrix4 partLocal, Matrix4 objectWorld) {
         out.set(objectWorld).mul(partLocal);

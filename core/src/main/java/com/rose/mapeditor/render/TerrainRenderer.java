@@ -220,9 +220,7 @@ public final class TerrainRenderer implements Disposable {
 
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glDepthFunc(GL20.GL_LEQUAL);
-        // Y/Z axis conversion inverts winding
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-        Gdx.gl.glFrontFace(GL20.GL_CW);
         Gdx.gl.glCullFace(GL20.GL_BACK);
 
 
@@ -268,7 +266,6 @@ public final class TerrainRenderer implements Disposable {
 
 
 
-        Gdx.gl.glFrontFace(GL20.GL_CCW);
         Gdx.gl.glDisable(GL20.GL_CULL_FACE);
         GlState.resetForUi();
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
